@@ -15,22 +15,19 @@ const O = fig.point.fixed(0, 0, { visible: false });
 const axisPoint = fig.point.fixed(1, 0, { visible: false });
 const baseLine = fig.line.throughPoints(O, axisPoint, { visible: false });
 
-// Drag H vertically. Its height above the base is the small radius r.
-const verticalPoint = fig.point.fixed(0, 1, { visible: false });
-const verticalRay = fig.ray.fromPoints(O, verticalPoint, { visible: false });
-const { point: H } = fig.point.onPath(verticalRay, {
-  at: [0, 7],
-  label: 'H',
+// Drag A vertically at the left endpoint of the chord. Translating A by 20
+// gives B, so the horizontal chord keeps its stated length while it moves.
+const verticalBase = fig.point.fixed(-10, 0, { visible: false });
+const verticalPoint = fig.point.fixed(-10, 1, { visible: false });
+const verticalRay = fig.ray.fromPoints(verticalBase, verticalPoint, { visible: false });
+const { point: A } = fig.point.onPath(verticalRay, {
+  at: [-10, 7],
   style: { fill: blue, stroke: '#ffffff', strokeWidth: 2, pointRadius: 7 },
 });
+const B = fig.transform.translated(A, [20, 0], { visible: false });
+const tangentLine = fig.line.parallelThrough(baseLine, A, { visible: false });
+const H = fig.point.projectionOnto(O, tangentLine, { visible: false });
 const r = fig.scalar.distance(O, H);
-
-// A circle of radius 10 centered at H cuts the horizontal tangent in two
-// points. Therefore AB is always 20, whatever the value of r.
-const tangentLine = fig.line.parallelThrough(baseLine, H, { visible: false });
-const halfChordCircle = fig.circle.fromCenterRadius(H, 10, { visible: false });
-const A = fig.point.intersect(halfChordCircle, tangentLine, { near: [16, 7], visible: false });
-const B = fig.point.intersect(halfChordCircle, tangentLine, { near: [-16, 7], visible: false });
 
 // OA is the large radius, so Pythagoras gives R² = r² + 10².
 const R = fig.scalar.distance(O, A);
@@ -78,11 +75,28 @@ fig.sector.fromCenterStartEnd(C, smallLeft, smallRight, {
 const diameter = fig.segment.between(largeLeft, largeRight, {
   style: { stroke: ink, strokeWidth: 2 },
 });
+// The proof triangle OAB is split by the perpendicular OH into two congruent
+// right triangles. In either half, the legs have lengths r and 10 and the
+// hypotenuse has length R.
+fig.polygon.from([O, A, B], {
+  style: { fill: blue, fillOpacity: 0.1, stroke: blue, strokeWidth: 1.5 },
+});
 const chord = fig.segment.between(A, B, {
   style: { stroke: orange, strokeWidth: 4 },
 });
 const largeRadius = fig.segment.between(O, A, {
   style: { stroke: blue, strokeWidth: 2, strokeDash: 'dashed' },
+});
+fig.segment.between(O, B, {
+  style: { stroke: blue, strokeWidth: 2, strokeDash: 'dashed' },
+});
+const verticalLeg = fig.segment.between(O, H, {
+  style: { stroke: orange, strokeWidth: 2, strokeDash: 'dashed' },
+});
+const halfChord = fig.segment.between(A, H, { visible: false });
+fig.angle.between(O, H, B, {
+  radius: 1.1,
+  style: { fill: orange, fillOpacity: 0.15, stroke: orange, strokeWidth: 1.5 },
 });
 const tangency = fig.point.projectionOnto(C, tangentLine, {
   style: { fill: orange, stroke: paper, strokeWidth: 2, pointRadius: 5 },
@@ -91,9 +105,26 @@ const smallRadius = fig.segment.between(C, tangency, {
   style: { stroke: orange, strokeWidth: 2, strokeDash: 'dashed' },
 });
 
-fig.text.label(chord, '20 cm', { offsetPx: [-100, -14], style: { fill: ink, fontSize: 16 } });
-fig.text.label(largeRadius, 'R', { offsetPx: [-10, -10], style: { fill: blue, fontSize: 18 } });
-fig.text.label(smallRadius, 'r', { offsetPx: [14, 0], style: { fill: orange, fontSize: 18 } });
+fig.text.label(chord, String.raw`20`, {
+  format: 'latex',
+  offsetPx: [0, 24],
+  style: { fill: ink, fontSize: 16 },
+});
+fig.text.label(halfChord, String.raw`10`, {
+  format: 'latex',
+  offsetPx: [0, -18],
+  style: { fill: orange, fontSize: 15 },
+});
+fig.text.label(largeRadius, String.raw`R`, {
+  format: 'latex',
+  offsetPx: [-10, -10],
+  style: { fill: blue, fontSize: 18 },
+});
+fig.text.label(verticalLeg, String.raw`r`, {
+  format: 'latex',
+  offsetPx: [14, 0],
+  style: { fill: orange, fontSize: 18 },
+});
 
 const roundedR = fig.scalar.fn((value) => Math.round(value * 100) / 100, R);
 const roundedr = fig.scalar.fn((value) => Math.round(value * 100) / 100, r);
