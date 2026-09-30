@@ -1,6 +1,6 @@
 // This source is intentionally unminified: copy it and adjust colors, labels,
 // camera, or construction details for the page where you embed the figure.
-import { Figure, format } from '../../neo.js';
+import { Figure } from '../../neo.js';
 
 const fig = new Figure();
 
@@ -44,7 +44,6 @@ const limitLeft = fig.point.intersect(limitCircle, baseLine, { near: [-30, 0], v
 const centerTrack = fig.segment.between(limitLeft, limitRight, { visible: false });
 const { point: C } = fig.point.onPath(centerTrack, {
   t: 0.68,
-  label: 'C',
   style: { fill: orange, stroke: '#ffffff', strokeWidth: 2, pointRadius: 7 },
 });
 
@@ -79,7 +78,7 @@ const diameter = fig.segment.between(largeLeft, largeRight, {
 // right triangles. In either half, the legs have lengths r and 10 and the
 // hypotenuse has length R.
 fig.polygon.from([O, A, B], {
-  style: { fill: blue, fillOpacity: 0.1, stroke: blue, strokeWidth: 1.5 },
+  style: { fill: '#f2c66d', fillOpacity: 0.3, stroke: blue, strokeWidth: 1.5 },
 });
 const chord = fig.segment.between(A, B, {
   style: { stroke: orange, strokeWidth: 4 },
@@ -94,52 +93,60 @@ const verticalLeg = fig.segment.between(O, H, {
   style: { stroke: orange, strokeWidth: 2, strokeDash: 'dashed' },
 });
 const halfChord = fig.segment.between(A, H, { visible: false });
-fig.angle.between(O, H, B, {
-  radius: 1.1,
-  style: { fill: orange, fillOpacity: 0.15, stroke: orange, strokeWidth: 1.5 },
+const rightAngleHorizontal = fig.transform.translated(H, [-1.15, 0], { visible: false });
+const rightAngleCorner = fig.transform.translated(H, [-1.15, -1.15], { visible: false });
+const rightAngleVertical = fig.transform.translated(H, [0, -1.15], { visible: false });
+fig.polyline.from([rightAngleHorizontal, rightAngleCorner, rightAngleVertical], {
+  style: { stroke: orange, strokeWidth: 1.8 },
 });
-const tangency = fig.point.projectionOnto(C, tangentLine, {
-  style: { fill: orange, stroke: paper, strokeWidth: 2, pointRadius: 5 },
-});
+const tangency = fig.point.projectionOnto(C, tangentLine, { visible: false });
 const smallRadius = fig.segment.between(C, tangency, {
   style: { stroke: orange, strokeWidth: 2, strokeDash: 'dashed' },
 });
 
+// Every formula and label shares one font size so the glyphs match.
+const latexStyle = { fill: ink, fontSize: 21.6 };
 fig.text.label(chord, String.raw`20`, {
   format: 'latex',
   offsetPx: [0, 24],
-  style: { fill: ink, fontSize: 16 },
+  style: latexStyle,
 });
 fig.text.label(halfChord, String.raw`10`, {
   format: 'latex',
   offsetPx: [0, -18],
-  style: { fill: orange, fontSize: 15 },
+  style: latexStyle,
 });
 fig.text.label(largeRadius, String.raw`R`, {
   format: 'latex',
   offsetPx: [-10, -10],
-  style: { fill: blue, fontSize: 18 },
+  style: latexStyle,
 });
 fig.text.label(verticalLeg, String.raw`r`, {
   format: 'latex',
   offsetPx: [14, 0],
-  style: { fill: orange, fontSize: 18 },
+  style: latexStyle,
+});
+fig.text.label(smallRadius, String.raw`r`, {
+  format: 'latex',
+  offsetPx: [14, 0],
+  style: latexStyle,
 });
 
-const roundedR = fig.scalar.fn((value) => Math.round(value * 100) / 100, R);
-const roundedr = fig.scalar.fn((value) => Math.round(value * 100) / 100, r);
-const invariant = fig.scalar.fn((large, small) => Math.round((large * large - small * small) * 100) / 100, R, r);
-const k = fig.scalar.fn((value) => value / 2, invariant);
-
-fig.text.viewport(0.025, 0.04, format`R = ${roundedR} cm   ·   r = ${roundedr} cm`, {
-  xAnchor: 'left', yAnchor: 'top', style: { fill: ink, fontSize: 16 },
+fig.text.world(0, -2.1, String.raw`r^2 + 10^2 = R^2 \quad\Rightarrow\quad R^2-r^2=100`, {
+  format: 'latex',
+  xAnchor: 'center',
+  style: latexStyle,
 });
-fig.text.viewport(0.025, 0.10, format`R² − r² = ${invariant}`, {
-  xAnchor: 'left', yAnchor: 'top', style: { fill: blue, fontSize: 18 },
-});
-fig.text.viewport(0.025, 0.17, format`Àrea pintada = ${k}π cm²`, {
-  xAnchor: 'left', yAnchor: 'top', style: { fill: orange, fontSize: 18 },
-});
+fig.text.world(
+  0,
+  -4.25,
+  String.raw`A_{\mathrm{blava}} = \frac{\pi R^2}{2} - \frac{\pi r^2}{2} = \frac{\pi}{2}(R^2-r^2) = \pi\frac{100}{2} = 50\pi`,
+  {
+    format: 'latex',
+    xAnchor: 'center',
+    style: latexStyle,
+  },
+);
 
 fig.render('#semicircle-figure', {
   renderer: 'svg',
